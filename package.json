@@ -1,0 +1,29 @@
+{
+    "name": "mqtt-neeo-bridge",
+    "version": "0.0.1",
+    "description": "Bridge neeo via HTTP to and from MQTT",
+    "license": "MIT",
+    "main": "mqtt-neeo-bridge.js",
+    "repository": {
+        "url": "https://github.com/terafin/mqtt-neeo-bridge"
+    },
+    "scripts": {
+        "start": "node mqtt-neeo-bridge.js"
+    },
+    "dependencies": {
+        "body-parser": "^1.17.1",
+        "path": "^0.12.7",
+        "repeat": "0.0.6",
+        "express": "^4.15.4",
+        "lodash": "^4.17.4",
+        "mqtt": "^2.6.2",
+        "request": "^2.81.0",
+        "url": "^0.11.0",
+        "winston": "^2.3.1",
+        "request": "^2.81.0",
+        "winston-splunk-httplogger": "^1.2.2"
+    },
+    "engines": {
+        "node": ">=4"
+    }
+}
