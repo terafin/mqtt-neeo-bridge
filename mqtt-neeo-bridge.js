@@ -6,12 +6,11 @@ const url = require('url')
 const express = require('express')
 const repeat = require('repeat')
 const bodyParser = require('body-parser')
-const request = require('request')
+const neeoapi = require('neeo-sdk')
 
 require('./homeautomation-js-lib/mqtt_helpers.js')
 
 // Config
-const brain_IP = process.env.BRAIN_IP
 const listening_port = process.env.LISTENING_PORT
 var neeo_topic = process.env.TOPIC_PREFIX
 
@@ -31,7 +30,7 @@ client.on('message', (topic, message) => {
 function updateActivityName(activity_name) {
     if (_.isNil(activity_name)) return
 
-    activity_name = _.snakeCase(activity_name)
+    activity_name = _.snakeCase(activity_name.toLowerCase())
 
     if (activity_name === 'poweroff')
         activity_name = 'off'
@@ -47,29 +46,23 @@ function startActivity(in_activity) {
 
     var powerOff = in_activity === 'off'
 
-    sendBrainCommand('/v1/api/Recipes', function(error, body) {
-        const recipies = JSON.parse(body)
-        var done = false
+    var done = false
 
-        recipies.forEach(function(recipe) {
-            if (done)
-                return
+    recipeEnumerator(function(recipe) {
+        if (done) return
 
-            if (recipe.type == 'launch') {
-                const deviceName = updateActivityName(decodeURI(recipe.detail.devicename))
+        const deviceName = updateActivityName(decodeURI(recipe.detail.devicename))
 
-                if (powerOff) {
-                    sendBrainCommand(recipe.url.setPowerOff, null)
-                    done = true
-                }
-                if (deviceName === search_activity) {
-                    sendBrainCommand(recipe.url.setPowerOn, null)
-                    done = true
-                }
-            }
-        }, this)
-
+        if (powerOff) {
+            recipe.action.powerOff()
+            done = true
+        }
+        if (deviceName === search_activity) {
+            recipe.action.powerOn()
+            done = true
+        }
     })
+
 }
 
 
@@ -88,9 +81,9 @@ app.get('/neeo/*', function(req, res) {
     const url_info = url.parse(req.url, true)
     var topic = url_info.pathname
     const body = req.body
-    const locationName = body.name
+        // const locationName = body.name
     const value = body.entry
-    const components = topic.split('/')
+        // const components = topic.split('/')
 
     console.log('path: ' + topic)
     console.log('body: ' + body)
@@ -114,64 +107,75 @@ app.listen(listening_port, function() {
     })
 })
 
-function sendBrainCommand(command, callback) {
-    var brainURL = 'http://' + brain_IP + ':3000'
-
-    if (_.startsWith(command, 'http://')) {
-        brainURL = command
-    } else if (command != null) {
-        brainURL = brainURL + command
-    }
-
-    logging.info('request url: ' + brainURL)
-
-    request(brainURL, function(error, response, body) {
-        if ((error !== null && error !== undefined)) {
-            logging.error('error:' + error)
-            logging.error('response:' + response)
-            logging.error('body:' + body)
-        }
-
-        if (callback !== null && callback !== undefined) {
-            callback(error, body)
-        }
-    })
-}
-
-
 var currentActivity = null
 
 function updateCurrentActivity(newActivity) {
     if (currentActivity !== newActivity) {
-        currentActivity = newActivity
-        console.log('current activity is now: ' + currentActivity)
-        client.smartPublish(neeo_topic, updateActivityName(currentActivity))
+        currentActivity = updateActivityName(newActivity)
+            // console.log('current activity is now: ' + currentActivity)
+        client.smartPublish(neeo_topic, currentActivity)
     }
 }
 
-function pollBrain() {
-    // brain_IP
-    // console.log('polling')
-    sendBrainCommand('/v1/api/Recipes', function(error, body) {
-        const recipies = JSON.parse(body)
-        var anythingOn = false
-        recipies.forEach(function(recipe) {
-            if (recipe.type == 'launch') {
-                const deviceName = decodeURI(recipe.detail.devicename)
-                const isPoweredOn = recipe.isPoweredOn
-                    // console.log('found launch type: ' + deviceName + '   is on: ' + isPoweredOn)
 
-                if (isPoweredOn) {
-                    anythingOn = true
-                    updateCurrentActivity(deviceName)
-                }
-            }
-        }, this)
-
-        if (!anythingOn) {
-            updateCurrentActivity('off')
-        }
-    })
+function startRecipePoller() {
+    repeat(sdkPollForCurrentActivity).every(1, 's').start.in(1, 'sec')
 }
 
-repeat(pollBrain).every(1, 's').start.in(1, 'sec')
+
+var connectedBrain = null
+
+function recipeEnumerator(callback) {
+    if (_.isNil(connectedBrain))
+        return
+    if (_.isNil(callback))
+        return
+
+    neeoapi.getRecipes(connectedBrain)
+        .then((recipes) => {
+            recipes.forEach((recipe) => {
+                callback(recipe)
+            })
+        })
+        .catch((err) => {
+            //if there was any error, print message out to console
+            console.error('ERROR enumerating recipes', err)
+        })
+}
+
+function sdkPollForCurrentActivity() {
+    if (_.isNil(connectedBrain))
+        return
+        // console.log('- Fetch power state of recipes')
+
+    neeoapi.getRecipesPowerState(connectedBrain)
+        .then((poweredOnKeys) => {
+            // console.log('- Power state fetched, powered on recipes:', poweredOnKeys)
+
+            if (_.isNil(poweredOnKeys) || poweredOnKeys.length == 0) {
+                updateCurrentActivity('off')
+            } else {
+                recipeEnumerator(function(recipe) {
+                    if (poweredOnKeys.includes(recipe.powerKey)) {
+                        updateCurrentActivity(decodeURIComponent(recipe.detail.devicename))
+                    }
+                })
+            }
+        })
+}
+
+
+const brainIp = process.env.BRAIN_IP
+if (brainIp) {
+    console.log('- use NEEO Brain IP from env variable', brainIp)
+    connectedBrain = brainIp
+    startRecipePoller()
+} else {
+    console.log('- discover one NEEO Brain...')
+    neeoapi.discoverOneBrain()
+        .then((brain) => {
+            console.log('- Brain discovered:', brain.name)
+            connectedBrain = brain
+            startRecipePoller()
+        })
+}
