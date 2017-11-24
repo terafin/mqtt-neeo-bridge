@@ -1,14 +1,14 @@
 // Requirements
 const mqtt = require('mqtt')
 const _ = require('lodash')
-const logging = require('./homeautomation-js-lib/logging.js')
+const logging = require('homeautomation-js-lib/logging.js')
 const url = require('url')
 const express = require('express')
 const repeat = require('repeat')
 const bodyParser = require('body-parser')
 const neeoapi = require('neeo-sdk')
 
-require('./homeautomation-js-lib/mqtt_helpers.js')
+require('homeautomation-js-lib/mqtt_helpers.js')
 
 // Config
 const listening_port = process.env.LISTENING_PORT
