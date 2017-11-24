@@ -5,7 +5,7 @@ COPY . /usr/node_app
 WORKDIR /usr/node_app
 
 RUN apt-get update; \
-    apt-get -y git
+    apt-get install -y git
 
 RUN npm install --production
 
