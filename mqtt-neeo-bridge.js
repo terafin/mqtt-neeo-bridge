@@ -2,8 +2,6 @@
 const mqtt = require('mqtt')
 const _ = require('lodash')
 const logging = require('homeautomation-js-lib/logging.js')
-const url = require('url')
-const express = require('express')
 const repeat = require('repeat')
 const bodyParser = require('body-parser')
 const neeoapi = require('neeo-sdk')
@@ -65,47 +63,6 @@ function startActivity(in_activity) {
 
 }
 
-
-
-// HS Web API
-const app = express()
-
-app.use(bodyParser.json())
-
-app.get('/neeo/*', function(req, res) {
-    if (_.isNil(req) || _.isNil(req.url)) {
-        res.send('bad request')
-        return
-    }
-
-    const url_info = url.parse(req.url, true)
-    var topic = url_info.pathname
-    const body = req.body
-        // const locationName = body.name
-    const value = body.entry
-        // const components = topic.split('/')
-
-    console.log('path: ' + topic)
-    console.log('body: ' + body)
-
-
-    if (_.isNil(body)) {
-        res.send('empty body')
-        return
-    }
-
-    if (!_.isNil(topic) && !_.isNil(value)) {
-        client.publish(topic, value)
-    }
-
-    res.send('topic: ' + topic + ' value: ' + value)
-})
-
-app.listen(listening_port, function() {
-    logging.info('Neeo-MQTT listening on port: ' + listening_port, {
-        event: 'neeo-startup'
-    })
-})
 
 var currentActivity = null
 
@@ -179,3 +136,52 @@ if (brainIp) {
             startRecipePoller()
         })
 }
+
+
+
+const http = require('http');
+const url = require('url');
+
+function handleBrainData(brainEvent) {
+    console.log('Brain Action', JSON.stringify(brainEvent));
+
+    if (brainEvent.action === 'launch' && brainEvent.recipe === 'Sonos') {
+        console.log(' >>> Simple Example - Sonos was launched!');
+    }
+}
+
+function getBody(request) {
+    return new Promise((resolve, reject) => {
+        const body = [];
+        request
+            .on('data', (chunk) => { body.push(chunk); })
+            .on('end', () => { resolve(JSON.parse(Buffer.concat(body).toString())); })
+            .on('error', (error) => { reject(error); });
+    });
+}
+
+// VERY primitive REST server, method call is ignored (GET/POST)
+function handleRequest(request, response) {
+    response.end();
+    const dataPromise = getBody(request);
+    const requestUrl = url.parse(request.url);
+    switch (requestUrl.pathname) {
+        case '/':
+        case '/neeo':
+            dataPromise
+                .then(handleBrainData)
+                .catch((error) => {
+                    console.log('Error', error);
+                });
+            break;
+        default:
+            console.log('invalid url:', requestUrl.pathname);
+    }
+}
+
+console.log('[NEEO] Forward Action example server');
+http
+    .createServer(handleRequest)
+    .listen(listening_port, '0.0.0.0', () => {
+        console.log('[NEEO] Server listening on: http://0.0.0.0:' + listening_port);
+    });
