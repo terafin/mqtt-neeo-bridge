@@ -70,7 +70,7 @@ function updateCurrentActivity(newActivity) {
     if (currentActivity !== newActivity) {
         currentActivity = updateActivityName(newActivity)
             // console.log('current activity is now: ' + currentActivity)
-        client.smartPublish(neeo_topic, currentActivity)
+        client.smartPublish(neeo_topic, currentActivity, { retain: true })
     }
 }
 
