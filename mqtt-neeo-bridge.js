@@ -70,7 +70,7 @@ var currentActivity = null
 function updateCurrentActivity(newActivity) {
     if (currentActivity !== newActivity) {
         currentActivity = updateActivityName(newActivity)
-            // console.log('current activity is now: ' + currentActivity)
+        // logging.info('current activity is now: ' + currentActivity)
         client.smartPublish(neeo_topic, currentActivity, { retain: true })
     }
 }
@@ -97,18 +97,18 @@ function recipeEnumerator(callback) {
         })
         .catch((err) => {
             //if there was any error, print message out to console
-            console.error('ERROR enumerating recipes', err)
+            logging.error('ERROR enumerating recipes', err)
         })
 }
 
 function sdkPollForCurrentActivity() {
     if (_.isNil(connectedBrain))
         return
-        // console.log('- Fetch power state of recipes')
+        // logging.info('- Fetch power state of recipes')
 
     neeoapi.getRecipesPowerState(connectedBrain)
         .then((poweredOnKeys) => {
-            // console.log('- Power state fetched, powered on recipes:', poweredOnKeys)
+            // logging.info('- Power state fetched, powered on recipes:', poweredOnKeys)
 
             if (_.isNil(poweredOnKeys) || poweredOnKeys.length == 0) {
                 updateCurrentActivity('off')
@@ -125,14 +125,14 @@ function sdkPollForCurrentActivity() {
 
 const brainIp = process.env.BRAIN_IP
 if (brainIp) {
-    console.log('- use NEEO Brain IP from env variable', brainIp)
+    logging.info('- use NEEO Brain IP from env variable', brainIp)
     connectedBrain = brainIp
     startRecipePoller()
 } else {
-    console.log('- discover one NEEO Brain...')
+    logging.info('- discover one NEEO Brain...')
     neeoapi.discoverOneBrain()
         .then((brain) => {
-            console.log('- Brain discovered:', brain.name)
+            logging.info('- Brain discovered:', brain.name)
             connectedBrain = brain
             startRecipePoller()
         })
@@ -143,15 +143,15 @@ const http = require('http')
 const url = require('url')
 
 function handleBrainData(brainEvent) {
-    console.log('Brain Action', JSON.stringify(brainEvent))
+    logging.info('Brain Action', JSON.stringify(brainEvent))
 
     switch (brainEvent.action) {
         case 'launch':
-            console.log(' >>> ' + brainEvent.recipe + ' was launched!')
+            logging.info(' >>> ' + brainEvent.recipe + ' was launched!')
             updateCurrentActivity(brainEvent.recipe)
             break
         case 'poweroff':
-            console.log(' >>> Brain powered off')
+            logging.info(' >>> Brain powered off')
             updateCurrentActivity('off')
             break
         
@@ -179,19 +179,19 @@ function handleRequest(request, response) {
             dataPromise
                 .then(handleBrainData)
                 .catch((error) => {
-                    console.log('Error', error)
+                    logging.error('Error', error)
                 })
             break
         default:
-            console.log('invalid url:', requestUrl.pathname)
+            logging.error('invalid url:', requestUrl.pathname)
     }
 }
 
 if ( useWebHook ) {
-    console.log('[NEEO] Starting simple webhook server')
+    logging.info('[NEEO] Starting simple webhook server')
     http
         .createServer(handleRequest)
         .listen(listening_port, '0.0.0.0', () => {
-            console.log('[NEEO] Server listening on: http://0.0.0.0:' + listening_port)
+            logging.info('[NEEO] Server listening on: http://0.0.0.0:' + listening_port)
         })
 }
