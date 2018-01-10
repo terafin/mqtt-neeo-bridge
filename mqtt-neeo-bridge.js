@@ -10,7 +10,7 @@ require('homeautomation-js-lib/mqtt_helpers.js')
 
 // Config
 const listening_port = process.env.LISTENING_PORT
-const useWebHook = process.env.ENABLE_WEBHOOK
+const useWebHook = !_.isNil(listening_port) && listening_port > 0
 var neeo_topic = process.env.TOPIC_PREFIX
 
 // Setup MQTT
@@ -78,9 +78,8 @@ function updateCurrentActivity(newActivity) {
 
 function startRecipePoller() {
     const pollInterval = useWebHook ? 120 : 1
-    repeat(sdkPollForCurrentActivity).every(1, 's').start.in(pollInterval, 'sec')
+    repeat(sdkPollForCurrentActivity).every(pollInterval, 's').start.in(1, 'sec')
 }
-
 
 var connectedBrain = null
 
@@ -140,51 +139,59 @@ if (brainIp) {
 }
 
 
-
-const http = require('http');
-const url = require('url');
+const http = require('http')
+const url = require('url')
 
 function handleBrainData(brainEvent) {
-    console.log('Brain Action', JSON.stringify(brainEvent));
+    console.log('Brain Action', JSON.stringify(brainEvent))
 
-    if (brainEvent.action === 'launch') {
-        console.log(' >>> ' + brainEvent.recipe + ' was launched!');
-        updateCurrentActivity(brainEvent.recipe)
+    switch (brainEvent.action) {
+        case 'launch':
+            console.log(' >>> ' + brainEvent.recipe + ' was launched!')
+            updateCurrentActivity(brainEvent.recipe)
+            break
+        case 'poweroff':
+            console.log(' >>> Brain powered off')
+            updateCurrentActivity('off')
+            break
+        
     }
 }
 
 function getBody(request) {
     return new Promise((resolve, reject) => {
-        const body = [];
+        const body = []
         request
-            .on('data', (chunk) => { body.push(chunk); })
-            .on('end', () => { resolve(JSON.parse(Buffer.concat(body).toString())); })
-            .on('error', (error) => { reject(error); });
-    });
+            .on('data', (chunk) => { body.push(chunk) })
+            .on('end', () => { resolve(JSON.parse(Buffer.concat(body).toString())) })
+            .on('error', (error) => { reject(error) })
+    })
 }
 
 // VERY primitive REST server, method call is ignored (GET/POST)
 function handleRequest(request, response) {
-    response.end();
-    const dataPromise = getBody(request);
-    const requestUrl = url.parse(request.url);
+    response.end()
+    const dataPromise = getBody(request)
+    const requestUrl = url.parse(request.url)
     switch (requestUrl.pathname) {
         case '/':
         case '/neeo':
             dataPromise
                 .then(handleBrainData)
                 .catch((error) => {
-                    console.log('Error', error);
-                });
-            break;
+                    console.log('Error', error)
+                })
+            break
         default:
-            console.log('invalid url:', requestUrl.pathname);
+            console.log('invalid url:', requestUrl.pathname)
     }
 }
 
-console.log('[NEEO] Forward Action example server');
-http
-    .createServer(handleRequest)
-    .listen(listening_port, '0.0.0.0', () => {
-        console.log('[NEEO] Server listening on: http://0.0.0.0:' + listening_port);
-    });
+if ( useWebHook ) {
+    console.log('[NEEO] Starting simple webhook server')
+    http
+        .createServer(handleRequest)
+        .listen(listening_port, '0.0.0.0', () => {
+            console.log('[NEEO] Server listening on: http://0.0.0.0:' + listening_port)
+        })
+}
