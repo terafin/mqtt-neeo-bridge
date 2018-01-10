@@ -10,6 +10,7 @@ require('homeautomation-js-lib/mqtt_helpers.js')
 
 // Config
 const listening_port = process.env.LISTENING_PORT
+const useWebHook = process.env.ENABLE_WEBHOOK
 var neeo_topic = process.env.TOPIC_PREFIX
 
 // Setup MQTT
@@ -145,8 +146,9 @@ const url = require('url');
 function handleBrainData(brainEvent) {
     console.log('Brain Action', JSON.stringify(brainEvent));
 
-    if (brainEvent.action === 'launch' && brainEvent.recipe === 'Sonos') {
-        console.log(' >>> Simple Example - Sonos was launched!');
+    if (brainEvent.action === 'launch') {
+        console.log(' >>> ' + brainEvent.recipe + ' was launched!');
+        updateCurrentActivity(brainEvent.recipe)
     }
 }
 
