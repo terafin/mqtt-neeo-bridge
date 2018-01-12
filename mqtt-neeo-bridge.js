@@ -77,6 +77,11 @@ function updateCurrentActivity(newActivity) {
 
 
 function startRecipePoller() {
+    if ( useWebHook ) {
+        sdkPollForCurrentActivity()
+        return
+    }
+    
     const pollInterval = useWebHook ? 120 : 1
     repeat(sdkPollForCurrentActivity).every(pollInterval, 's').start.in(1, 'sec')
 }
