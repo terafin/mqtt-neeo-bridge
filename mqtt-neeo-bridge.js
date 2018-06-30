@@ -64,7 +64,6 @@ function startActivity(in_activity) {
 
 }
 
-
 var currentActivity = null
 
 function updateCurrentActivity(newActivity) {
@@ -128,7 +127,6 @@ function sdkPollForCurrentActivity() {
         })
 }
 
-
 const brainIp = process.env.BRAIN_IP
 if (brainIp) {
     logging.info('- use NEEO Brain IP from env variable', brainIp)
@@ -143,7 +141,6 @@ if (brainIp) {
             startRecipePoller()
         })
 }
-
 
 const http = require('http')
 const url = require('url')
