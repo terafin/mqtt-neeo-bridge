@@ -2,7 +2,7 @@ env.SERVICE_ID='1s28'
 
 node {
    stage('Checkout') {
-      git 'https://github.com/terafin/mqtt-state.git'
+      git 'https://github.com/terafin/mqtt-neeo-bridge.git'
    }
    stage('Docker Build') {
        sh 'docker build --rm=false -t "$DOCKER_USER/$JOB_NAME" .'
