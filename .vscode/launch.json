@@ -8,10 +8,13 @@
         "request": "launch",
         "name": "Launch Program",
         "program": "${workspaceRoot}/mqtt-neeo-bridge.js",
+        "outputCapture": "std",
         "env": {
             "LISTENING_PORT": "3000",
             "TOPIC_PREFIX": "/neeo",
-            "MQTT_HOST": "mqtt://10.0.1.10",
+            "MQTT_HOST": "mqtt://mqtt",
+            "MQTT_USER": "home",
+            "MQTT_PASS": "xa-QWClDjyeULyaeVNvjGPF6vzXYue4y",
             "BRAIN_IP": "10.0.1.20",
 
             "LOGGING_NAME": "mqtt-neeo-bridge"
