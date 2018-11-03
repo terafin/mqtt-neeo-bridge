@@ -3,7 +3,6 @@ const mqtt = require('mqtt')
 const _ = require('lodash')
 const logging = require('homeautomation-js-lib/logging.js')
 const repeat = require('repeat')
-const bodyParser = require('body-parser')
 const neeoapi = require('neeo-sdk')
 
 require('homeautomation-js-lib/mqtt_helpers.js')
@@ -167,14 +166,14 @@ const handleBrainData = function(brainEvent) {
 	logging.info('Brain Action', JSON.stringify(brainEvent))
 
 	switch (brainEvent.action) {
-	case 'launch':
-		logging.info(' >>> ' + brainEvent.recipe + ' was launched!')
-		updateCurrentActivity(brainEvent.recipe)
-		break
-	case 'poweroff':
-		logging.info(' >>> Brain powered off')
-		updateCurrentActivity('off')
-		break
+		case 'launch':
+			logging.info(' >>> ' + brainEvent.recipe + ' was launched!')
+			updateCurrentActivity(brainEvent.recipe)
+			break
+		case 'poweroff':
+			logging.info(' >>> Brain powered off')
+			updateCurrentActivity('off')
+			break
         
 	}
 }
@@ -201,16 +200,16 @@ const handleRequest = function(request, response) {
 	const dataPromise = getBody(request)
 	const requestUrl = url.parse(request.url)
 	switch (requestUrl.pathname) {
-	case '/':
-	case '/neeo':
-		dataPromise
-			.then(handleBrainData)
-			.catch((error) => {
-				logging.error('Error', error)
-			})
-		break
-	default:
-		logging.error('invalid url:', requestUrl.pathname)
+		case '/':
+		case '/neeo':
+			dataPromise
+				.then(handleBrainData)
+				.catch((error) => {
+					logging.error('Error', error)
+				})
+			break
+		default:
+			logging.error('invalid url:', requestUrl.pathname)
 	}
 }
 

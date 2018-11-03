@@ -58,3 +58,4 @@ typings/
 .env
 
 .vscode
+.vscode/launch.json
