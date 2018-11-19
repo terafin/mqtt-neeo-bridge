@@ -14,7 +14,7 @@ var neeo_topic = process.env.TOPIC_PREFIX
 
 // Setup MQTT
 const client = mqtt.setupClient(function() {
-	client.subscribe(neeo_topic + '/set')
+	client.subscribe(neeo_topic + '/set', {qos: 2})
 }, null)
 
 client.on('message', (topic, message) => {
@@ -78,7 +78,7 @@ const updateCurrentActivity = function(newActivity) {
 	if (currentActivity !== newActivity) {
 		currentActivity = updateActivityName(newActivity)
 		logging.info('current activity is now: ' + currentActivity)
-		client.smartPublish(neeo_topic, currentActivity, {retain: true})
+		client.smartPublish(neeo_topic, currentActivity, {retain: true, qos: 2})
 	}
 }
 
