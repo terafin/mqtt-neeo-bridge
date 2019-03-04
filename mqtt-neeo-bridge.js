@@ -143,12 +143,6 @@ if (brainIp) {
 	logging.info('- use NEEO Brain IP from env variable', brainIp)
 	connectedBrain = brainIp
 	startRecipePoller()
-    
-	setTimeout(function(){
-		logging.info('starting playstation')
-		startActivity('playstation') 
-	}, 3000)
-
 } else {
 	logging.info('- discover one NEEO Brain...')
 	neeoapi.discoverOneBrain()
