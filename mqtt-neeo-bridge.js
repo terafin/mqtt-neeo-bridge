@@ -157,7 +157,7 @@ const http = require('http')
 const url = require('url')
 
 const handleBrainData = function(brainEvent) {
-	logging.info('Brain Action', JSON.stringify(brainEvent))
+	logging.info('Brain Action: ' + JSON.stringify(brainEvent))
 
 	switch (brainEvent.action) {
 		case 'launch':
