@@ -5,7 +5,7 @@ const logging = require('homeautomation-js-lib/logging.js')
 const repeat = require('repeat')
 const neeoapi = require('neeo-sdk')
 
-require('homeautomation-js-lib/mqtt_helpers.js')
+const mqtt_helpers = require('homeautomation-js-lib/mqtt_helpers.js')
 
 // Config
 const listening_port = process.env.LISTENING_PORT
@@ -170,8 +170,8 @@ const handleBrainData = function(brainEvent) {
 			break
         
 	}
-	const topic = mqtt.generateTopic(neeo_topic, brainEvent.room, brainEvent.device)
-	client.publish(topic, mqtt.generateTopic(brainEvent.action), {retain: false, qos: 2})
+	const topic = mqtt_helpers.generateTopic(neeo_topic, brainEvent.room, brainEvent.device)
+	client.publish(topic, mqtt_helpers.generateTopic(brainEvent.action), {retain: false, qos: 2})
 }
 
 const getBody = function(request) {
