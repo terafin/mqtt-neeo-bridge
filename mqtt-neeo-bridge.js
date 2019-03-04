@@ -170,8 +170,8 @@ const handleBrainData = function(brainEvent) {
 			break
         
 	}
-	const topic = generateTopic(neeo_topic, brainEvent.room, brainEvent.device, brainEvent.action)
-	client.publish(topic, brainEvent.action, {retain: false, qos: 2})
+	const topic = mqtt.generateTopic(neeo_topic, brainEvent.room, brainEvent.device)
+	client.publish(topic, mqtt.generateTopic(brainEvent.action), {retain: false, qos: 2})
 }
 
 const getBody = function(request) {
