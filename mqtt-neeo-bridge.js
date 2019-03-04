@@ -170,7 +170,7 @@ const handleBrainData = function(brainEvent) {
 			break
         
 	}
-	client.publish(neeo_topic + '/button_event', brainEvent, {retain: false, qos: 2})
+	client.publish(neeo_topic + '/button_event', brainEvent.action, {retain: false, qos: 2})
 }
 
 const getBody = function(request) {
