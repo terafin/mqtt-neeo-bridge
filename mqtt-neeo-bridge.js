@@ -78,7 +78,7 @@ const updateCurrentActivity = function(newActivity) {
 	if (currentActivity !== newActivity) {
 		currentActivity = updateActivityName(newActivity)
 		logging.info('current activity is now: ' + currentActivity)
-		client.smartPublish(neeo_topic, currentActivity, {retain: true, qos: 2})
+		client.smartPublish(neeo_topic, currentActivity, {retain: true, qos: 1})
 	}
 }
 
@@ -171,7 +171,7 @@ const handleBrainData = function(brainEvent) {
         
 	}
 	const topic = mqtt_helpers.generateTopic(neeo_topic, brainEvent.room, brainEvent.device)
-	client.publish(topic, mqtt_helpers.generateTopic(brainEvent.action), {retain: false, qos: 2})
+	client.publish(topic, mqtt_helpers.generateTopic(brainEvent.action), {retain: false, qos: 1})
 }
 
 const getBody = function(request) {
