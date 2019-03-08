@@ -14,7 +14,7 @@ var neeo_topic = process.env.TOPIC_PREFIX
 
 // Setup MQTT
 const client = mqtt.setupClient(function() {
-	client.subscribe(neeo_topic + '/set', {qos: 2})
+	client.subscribe(neeo_topic + '/set', {qos: 1})
 }, null)
 
 client.on('message', (topic, message) => {
